@@ -1,0 +1,4 @@
+log_input/*.txt
+log_output/*.txt
+insight_testsuite/*/*/*.txt
+src/*.txt
