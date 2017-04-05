@@ -12,22 +12,24 @@ import os
 
 #script_dir = os.path.dirname(__file__) #<-- absolute dir the script is in
 script_dir = "./"
+#script_dir = "../"
 
 
 payLoad = {}
 for i in ['host', 'res', 'bytes', 'time', 'code']:
 	payLoad[i] = []
 
-rel_path = "../log_input"
+rel_path = "log_input"
 logDir = os.path.join(script_dir, rel_path)
 fileName = logDir + '/log.txt'
 start = time()
 with io.open(fileName, 'r', encoding='windows-1252', errors='ignore') as infile:
 	for line in infile:
-		temp = (re.sub(r'(?is)\[|\]|\"', '', line)).split()
+		#temp = (re.sub(r'(?is)\[|\]|\"', '', line)).split()
+		temp = (re.sub(r'(?is)\[|\]', '', line)).split()
 		payLoad['host'].append(temp[0])
 		payLoad['time'].append(temp[3])
-		payLoad['res'].append(temp[-4])
+		payLoad['res'].append(temp[-5] + " " + temp[-4] + " " + temp[-3])
 		payLoad['code'].append(temp[-2])
 		payLoad['bytes'].append(temp[-1])
 end = time()
@@ -41,7 +43,7 @@ payLoad.index = pd.to_datetime(payLoad['time'], format="%d/%b/%Y:%H:%M:%S")
 payLoad = payLoad.drop('time', axis = 1)
 payLoad['nCounts'] = 1 	
 
-rel_path = "../log_output"
+rel_path = "log_output"
 logDir = os.path.join(script_dir, rel_path)
 
 

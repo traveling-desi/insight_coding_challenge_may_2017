@@ -52,7 +52,6 @@ function setup_testing_input_output {
   rm -r ${TEST_OUTPUT_PATH}/log_input/*
   rm -r ${TEST_OUTPUT_PATH}/log_output/*
   cp -r ${GRADER_ROOT}/tests/${test_folder}/log_input/log.txt ${TEST_OUTPUT_PATH}/log_input/log.txt
-  cp -r ${GRADER_ROOT}/tests/${test_folder}/log_input/temp*.txt ${TEST_OUTPUT_PATH}/log_input/temp*.txt
 }
 
 function compare_outputs {
