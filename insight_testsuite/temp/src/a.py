@@ -16,7 +16,8 @@ script_dir = "./"
 
 
 payLoad = {}
-for i in ['host', 'res', 'bytes', 'time', 'code']:
+for i in ['host', 'res', 'bytes', 'time', 'code', 'record', 'timeStr']:
+#for i in ['host', 'res', 'bytes', 'time', 'code']:
 	payLoad[i] = []
 
 rel_path = "log_input"
@@ -27,11 +28,14 @@ with io.open(fileName, 'r', encoding='windows-1252', errors='ignore') as infile:
 	for line in infile:
 		#temp = (re.sub(r'(?is)\[|\]|\"', '', line)).split()
 		temp = (re.sub(r'(?is)\[|\]', '', line)).split()
+		timeStr = re.search(r'\[(.*)\]', line)
 		payLoad['host'].append(temp[0])
 		payLoad['time'].append(temp[3])
-		payLoad['res'].append(temp[-5] + " " + temp[-4] + " " + temp[-3])
+		payLoad['res'].append(temp[-4])
 		payLoad['code'].append(temp[-2])
 		payLoad['bytes'].append(temp[-1])
+		payLoad['record'].append(str(line))
+		payLoad['timeStr'].append(timeStr.group(1))
 end = time()
 # Print the results
 print("Read the file in {:.4f} seconds".format(end - start))
@@ -51,8 +55,8 @@ logDir = os.path.join(script_dir, rel_path)
 print("Computing Feature 1")
 start = time()
 fileName = logDir + '/hosts.txt'
-with open(fileName, 'a') as out_file:
-	print(payLoad.reset_index()['host'].value_counts(sort=True, ascending=False)[0:9], file=out_file)
+with open(fileName, 'w') as out_file:
+	print(payLoad.reset_index()['host'].value_counts(sort=True, ascending=False)[0:9].to_csv(), file=out_file)
 	#print(payLoad[['res','bytes']].groupby('res').count().sort_values(by='bytes',ascending=False)[0:9])
 	#print(payLoad[['res','bytes']].groupby('res')['bytes'].sum().sort_values(ascending=False))
 
@@ -66,19 +70,22 @@ print("Computed Feature 1 in  {:.4f} seconds".format(end - start))
 print("Computing Feature 2")
 start = time()
 fileName = logDir + '/resources.txt'
-with open(fileName, 'a') as out_file:
-	print(payLoad.reset_index().groupby('res')['bytes'].sum().sort_values(ascending=False)[0:9], file=out_file)
+with open(fileName, 'w') as out_file:
+	#print(payLoad.reset_index().groupby('res')['bytes'].sum().sort_values(ascending=False)[0:9], file=out_file)
+	#print(payLoad.reset_index().groupby('res')['bytes'].sum().sort_values(ascending=False).reset_index().loc[0:9, ['res']], file=out_file)
+	#print(payLoad.reset_index().groupby('res')['bytes'].sum().sort_values(ascending=False).reset_index().loc[0:9, ['res']].to_string(index=False), file=out_file)
+	print(payLoad.reset_index().groupby('res')['bytes'].sum().sort_values(ascending=False).reset_index().loc[0:9, ['res']].to_csv(sep=' ', index=False, header = False), file=out_file)
 end = time()
 # Print the results
 print("Computed Feature 2 in  {:.4f} seconds".format(end - start))
-
 
 ## FEATURE 3: rolling 60 min time slots with most accesses
 print("Computing Feature 3")
 start = time()
 fileName = logDir + '/hours.txt'
-with open(fileName, 'a') as out_file:
-	print(payLoad.rolling(window='h')['nCounts'].count().sort_values(ascending=False)[0:9], file=out_file)
+with open(fileName, 'w') as out_file:
+	print(payLoad.rolling(window='h')[['timeStr', 'nCounts']].count().sort_values(by='nCounts', ascending=False)[0:9].to_csv(sep=',', index=False, header = False), file=out_file)
+	#print(payLoad.rolling(window='h')['nCounts'].count().sort_values(ascending=False)[0:9].reset_index().to_csv(sep=',', index=False, header = False), file=out_file)
 	#print(payLoad.rolling(window='h')['bytes'].count().sort_values(ascending=False)[0:9])
 end = time()
 # Print the results
@@ -98,22 +105,37 @@ b = b.join(b['time'] + pd.to_timedelta(300, unit='s'), rsuffix='_threehundred')
 b = b.drop('time', axis=1)
 payLoad = payLoad.drop('nCounts', axis=1)
 
+printSet = []
+
 def emit(record):
 	record = list(record)
 	host = record[2]
-	t1 = record[5]
-	t2 = record[6]
-	print(payLoad[(payLoad.host == host) & (payLoad.index >= t1) & (payLoad.index <= t2)], file=out_file)
+	t1 = record[7]
+	t2 = record[8]
+	#print(payLoad[(payLoad.host == host) & (payLoad.index >= t1) & (payLoad.index <= t2)].reset_index()['record'].values, file=out_file)
+	#print(payLoad[(payLoad.host == host) & (payLoad.index >= t1) & (payLoad.index <= t2)].reset_index()['record'].values.tolist())
+	printSet.append(payLoad[(payLoad.host == host) & (payLoad.index >= t1) & (payLoad.index <= t2)].reset_index()['record'].values)
+	#print(payLoad[(payLoad.host == host) & (payLoad.index >= t1) & (payLoad.index <= t2)], file=out_file)
+	#print(printSet)
 
-with open(fileName, 'a') as out_file:
+with open(fileName, 'w') as out_file:
 	b.apply(emit, axis=1)
+	printSet = set([item for sublist in printSet for item in sublist])
+	#print(printSet)
+	print("".join(printSet), file=out_file)
 
 end = time()
 # Print the results
 print("Computed Feature 4 in  {:.4f} seconds".format(end - start))
 
 
+
+
+
+
+
 '''
+The commands from here on down are not run. They have been commented out. There are additional feature implemented here.
 
 ## 60 min time slots @ the top of the hour.
 #print(payLoad.resample('H', label='left')['bytes'].sum().sort_values(ascending=False)[0:9])

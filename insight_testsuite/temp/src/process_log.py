@@ -6,50 +6,54 @@ import io
 import pandas as pd
 import re
 from time import time
-import os
 
 
-
-#script_dir = os.path.dirname(__file__) #<-- absolute dir the script is in
 script_dir = "./"
 #script_dir = "../"
 
+def createDF(payLoadSet, fields):
+	payLoad = {}
+	for (i, j) in fields:
+		payLoad[i] = []
+	for i in ['record', 'timeStr']:
+		payLoad[i] = []
 
-payLoad = {}
-for i in ['host', 'res', 'bytes', 'time', 'code', 'record', 'timeStr']:
-#for i in ['host', 'res', 'bytes', 'time', 'code']:
-	payLoad[i] = []
-
-rel_path = "log_input"
-logDir = os.path.join(script_dir, rel_path)
-fileName = logDir + '/log.txt'
-start = time()
-with io.open(fileName, 'r', encoding='windows-1252', errors='ignore') as infile:
-	for line in infile:
+	for line in payLoadSet:
 		#temp = (re.sub(r'(?is)\[|\]|\"', '', line)).split()
 		temp = (re.sub(r'(?is)\[|\]', '', line)).split()
 		timeStr = re.search(r'\[(.*)\]', line)
-		payLoad['host'].append(temp[0])
-		payLoad['time'].append(temp[3])
-		payLoad['res'].append(temp[-4])
-		payLoad['code'].append(temp[-2])
-		payLoad['bytes'].append(temp[-1])
+		for (i, j) in fields:
+			payLoad[i].append(temp[j])
 		payLoad['record'].append(str(line))
 		payLoad['timeStr'].append(timeStr.group(1))
+	payLoad = pd.DataFrame(payLoad)
+	return payLoad
+
+
+
+rel_path = "log_input"
+logDir = script_dir + rel_path
+fileName = logDir + '/log.txt'
+start = time()
+with io.open(fileName, 'r', encoding='windows-1252', errors='ignore') as infile:
+	payLoadSet = []
+	for line in infile:
+		payLoadSet.append(line)
+
+	payLoad = createDF(payLoadSet, [('host', 0), ('time', 3), ('res', -4), ('code', -2), ('bytes', -1)])
+	payLoad['bytes'] = pd.to_numeric(payLoad['bytes'], errors='coerce')
+	payLoad.index = pd.to_datetime(payLoad['time'], format="%d/%b/%Y:%H:%M:%S")
+	payLoad = payLoad.drop('time', axis = 1)
+	payLoad['nCounts'] = 1 	
+
 end = time()
 # Print the results
 print("Read the file in {:.4f} seconds".format(end - start))
 
 
-payLoad = pd.DataFrame(payLoad)
-payLoad['bytes'] = pd.to_numeric(payLoad['bytes'], errors='coerce')
-payLoad.index = pd.to_datetime(payLoad['time'], format="%d/%b/%Y:%H:%M:%S")
-payLoad = payLoad.drop('time', axis = 1)
-payLoad['nCounts'] = 1 	
 
 rel_path = "log_output"
-logDir = os.path.join(script_dir, rel_path)
-
+logDir = script_dir + rel_path
 
 ## FEATURE1: Top hosts
 print("Computing Feature 1")
@@ -64,8 +68,6 @@ end = time()
 # Print the results
 print("Computed Feature 1 in  {:.4f} seconds".format(end - start))
 
-
-
 ## FEATURE2: Top resources
 print("Computing Feature 2")
 start = time()
@@ -78,8 +80,6 @@ with open(fileName, 'w') as out_file:
 end = time()
 # Print the results
 print("Computed Feature 2 in  {:.4f} seconds".format(end - start))
-
-print(payLoad)
 
 ## FEATURE 3: rolling 60 min time slots with most accesses
 print("Computing Feature 3")
@@ -107,18 +107,27 @@ b = b.join(b['time'] + pd.to_timedelta(300, unit='s'), rsuffix='_threehundred')
 b = b.drop('time', axis=1)
 payLoad = payLoad.drop('nCounts', axis=1)
 
+payLoadSet = []
 
 def emit(record):
-	print(record)
 	record = list(record)
 	host = record[2]
 	t1 = record[7]
 	t2 = record[8]
-	print(payLoad[(payLoad.host == host) & (payLoad.index >= t1) & (payLoad.index <= t2)].reset_index()['record'].values, file=out_file)
+	#print(payLoad[(payLoad.host == host) & (payLoad.index >= t1) & (payLoad.index <= t2)].reset_index()['record'].values, file=out_file)
+	#print(payLoad[(payLoad.host == host) & (payLoad.index >= t1) & (payLoad.index <= t2)].reset_index()['record'].values.tolist())
+	payLoadSet.append(payLoad[(payLoad.host == host) & (payLoad.index >= t1) & (payLoad.index <= t2)].reset_index()['record'].values)
 	#print(payLoad[(payLoad.host == host) & (payLoad.index >= t1) & (payLoad.index <= t2)], file=out_file)
+	#print(payLoadSet)
 
 with open(fileName, 'w') as out_file:
 	b.apply(emit, axis=1)
+	payLoadSet = set([item for sublist in payLoadSet for item in sublist])
+	payLoad = createDF(payLoadSet, [('time', 3)])
+	payLoad.drop_duplicates()
+	print(payLoad)
+	#print(payLoadSet)
+	print("".join(payLoadSet), file=out_file)
 
 end = time()
 # Print the results
