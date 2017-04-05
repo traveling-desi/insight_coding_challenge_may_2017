@@ -8,7 +8,7 @@
 7. [Testing your directory structure and output format](README.md#testing-your-directory-structure-and-output-format)
 8. [Instructions to submit your solution](README.md#instructions-to-submit-your-solution)
 9. [FAQ](README.md#faq)
-10.[Solutions](README.md#SOLUTIONS)
+10. [Solutions](README.md#solutions)
 
 # Challenge Summary
 
@@ -291,7 +291,7 @@ Generally, we will evaluate your coding challenge with a testing suite that prov
 We receive hundreds of submissions and try to evaluate them all in a timely manner. We try to get back to all applicants within two or three weeks of submission, but if you have a specific deadline that requires expedited review, you may email us at `cc@insightdataengineering.com`.
 
 
-# SOLUTIONS
+# Solutions
 
 The script is in src/process_log.py
 
