@@ -68,8 +68,6 @@ start = time()
 fileName = logDir + '/hosts.txt'
 with open(fileName, 'w') as out_file:
 	print(payLoad.reset_index()['host'].value_counts(sort=True, ascending=False)[0:9].to_csv(), file=out_file)
-	#print(payLoad[['res','bytes']].groupby('res').count().sort_values(by='bytes',ascending=False)[0:9])
-	#print(payLoad[['res','bytes']].groupby('res')['bytes'].sum().sort_values(ascending=False))
 
 end = time()
 # Print the results
@@ -84,9 +82,6 @@ print("Computing Feature 2")
 start = time()
 fileName = logDir + '/resources.txt'
 with open(fileName, 'w') as out_file:
-	#print(payLoad.reset_index().groupby('res')['bytes'].sum().sort_values(ascending=False)[0:9], file=out_file)
-	#print(payLoad.reset_index().groupby('res')['bytes'].sum().sort_values(ascending=False).reset_index().loc[0:9, ['res']], file=out_file)
-	#print(payLoad.reset_index().groupby('res')['bytes'].sum().sort_values(ascending=False).reset_index().loc[0:9, ['res']].to_string(index=False), file=out_file)
 	print(payLoad.reset_index().groupby('res')['bytes'].sum().sort_values(ascending=False).reset_index().loc[0:9, ['res']].to_csv(sep=' ', index=False, header = False), file=out_file)
 end = time()
 # Print the results
@@ -104,8 +99,6 @@ start = time()
 fileName = logDir + '/hours.txt'
 with open(fileName, 'w') as out_file:
 	print(payLoad.rolling(window='h')[['timeStr', 'nCounts']].count().sort_values(by='nCounts', ascending=False)[0:9].to_csv(sep=',', index=False, header = False), file=out_file)
-	#print(payLoad.rolling(window='h')['nCounts'].count().sort_values(ascending=False)[0:9].reset_index().to_csv(sep=',', index=False, header = False), file=out_file)
-	#print(payLoad.rolling(window='h')['bytes'].count().sort_values(ascending=False)[0:9])
 end = time()
 # Print the results
 print("Computed Feature 3 in  {:.4f} seconds".format(end - start))
@@ -133,12 +126,7 @@ def emit(record):
 	host = record[2]
 	t1 = record[7]
 	t2 = record[8]
-	#print(payLoad[(payLoad.host == host) & (payLoad.index >= t1) & (payLoad.index <= t2)].reset_index()['record'].values, file=out_file)
-	#print(payLoad[(payLoad.host == host) & (payLoad.index >= t1) & (payLoad.index <= t2)].reset_index()['record'].values.tolist())
 	payLoadSet.append(payLoad[(payLoad.host == host) & (payLoad.index >= t1) & (payLoad.index <= t2)].reset_index()['record'])
-	#payLoadSet.append(payLoad[(payLoad.host == host) & (payLoad.index >= t1) & (payLoad.index <= t2)].reset_index()['record'].values)
-	#print(payLoad[(payLoad.host == host) & (payLoad.index >= t1) & (payLoad.index <= t2)], file=out_file)
-	#print(payLoadSet)
 
 with open(fileName, 'w') as out_file:
 	b.apply(emit, axis=1)
