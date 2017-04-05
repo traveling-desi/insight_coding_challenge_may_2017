@@ -8,7 +8,7 @@
 7. [Testing your directory structure and output format](README.md#testing-your-directory-structure-and-output-format)
 8. [Instructions to submit your solution](README.md#instructions-to-submit-your-solution)
 9. [FAQ](README.md#faq)
-
+10.[Solutions](README.md#SOLUTIONS)
 
 # Challenge Summary
 
@@ -289,3 +289,52 @@ Generally, we will evaluate your coding challenge with a testing suite that prov
 
 ### How long will it take for me to hear back from you about my submission?
 We receive hundreds of submissions and try to evaluate them all in a timely manner. We try to get back to all applicants within two or three weeks of submission, but if you have a specific deadline that requires expedited review, you may email us at `cc@insightdataengineering.com`.
+
+
+# SOLUTIONS
+
+The script is in src/process_log.py
+
+The output of the run tests are :
+
+        nikhil (master *) insight_testsuite $ ./run_tests.sh 
+        Read the file in 0.0234 seconds
+        Computing Feature 1
+        Computed Feature 1 in  0.0083 seconds
+        Computing Feature 2
+        Computed Feature 2 in  0.0078 seconds
+        Computing Feature 3
+        Computed Feature 3 in  0.0088 seconds
+        Computing Feature 4
+        Computed Feature 4 in  0.0365 seconds
+        [PASS]: test_features (hosts.txt)
+        [PASS]: test_features (resources.txt)
+        [FAIL]: test_features (hours.txt)
+        1,9c1,10
+        < 01/Jul/1995:00:00:15 -0400,10.0
+        < 01/Jul/1995:00:00:14 -0400,8.0
+        < 01/Jul/1995:00:00:13 -0400,6.0
+        < 01/Jul/1995:00:00:12 -0400,5.0
+        < 01/Jul/1995:00:00:11 -0400,4.0
+        < 01/Jul/1995:00:00:09 -0400,3.0
+        < 01/Jul/1995:00:00:06 -0400,2.0
+        < 01/Jul/1995:00:00:01 -0400,1.0
+        < 
+        ---
+        > 01/Jul/1995:00:00:01 -0400,10
+        > 01/Jul/1995:00:00:02 -0400,9
+        > 01/Jul/1995:00:00:03 -0400,9
+        > 01/Jul/1995:00:00:04 -0400,9
+        > 01/Jul/1995:00:00:05 -0400,9
+        > 01/Jul/1995:00:00:06 -0400,9
+        > 01/Jul/1995:00:00:07 -0400,8
+        > 01/Jul/1995:00:00:08 -0400,8
+        > 01/Jul/1995:00:00:09 -0400,8
+        > 01/Jul/1995:00:00:10 -0400,7
+        \ No newline at end of file
+        [PASS]: test_features (blocked.txt)
+        [Wed Apr  5 16:24:58 PDT 2017] 3 of 4 tests passed
+
+
+For the feature 3, the tests fail because I have used backward looking windows in Pandas (i.e the evnts are counted and assigned to a window once 60 mins are up), while the tests are expecting a forward looking window (i.e the window starts from the current time step and counts events till 60 minutes are up.) They count the same thing, but my implementation assigns it to the right edge of the 60 mins window, while the tests assign them to the left edge of the 60 mins window. There is no way to do a forward looking time based window in Pandas (there is a workaround for a normal index based window.)
+
