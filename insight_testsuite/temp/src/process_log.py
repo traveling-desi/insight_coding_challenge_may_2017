@@ -116,7 +116,8 @@ def emit(record):
 	t2 = record[8]
 	#print(payLoad[(payLoad.host == host) & (payLoad.index >= t1) & (payLoad.index <= t2)].reset_index()['record'].values, file=out_file)
 	#print(payLoad[(payLoad.host == host) & (payLoad.index >= t1) & (payLoad.index <= t2)].reset_index()['record'].values.tolist())
-	payLoadSet.append(payLoad[(payLoad.host == host) & (payLoad.index >= t1) & (payLoad.index <= t2)].reset_index()['record'].values)
+	payLoadSet.append(payLoad[(payLoad.host == host) & (payLoad.index >= t1) & (payLoad.index <= t2)].reset_index()['record'])
+	#payLoadSet.append(payLoad[(payLoad.host == host) & (payLoad.index >= t1) & (payLoad.index <= t2)].reset_index()['record'].values)
 	#print(payLoad[(payLoad.host == host) & (payLoad.index >= t1) & (payLoad.index <= t2)], file=out_file)
 	#print(payLoadSet)
 
@@ -125,9 +126,10 @@ with open(fileName, 'w') as out_file:
 	payLoadSet = set([item for sublist in payLoadSet for item in sublist])
 	payLoad = createDF(payLoadSet, [('time', 3)])
 	payLoad.drop_duplicates()
-	print(payLoad)
-	#print(payLoadSet)
-	print("".join(payLoadSet), file=out_file)
+	payLoad.index = pd.to_datetime(payLoad['time'], format="%d/%b/%Y:%H:%M:%S")
+	payLoad = payLoad.sort_index()
+	payLoad = payLoad.drop(['time', 'timeStr'], axis=1)
+	print("".join(payLoad.reset_index()['record'].values) , file=out_file)
 
 end = time()
 # Print the results
