@@ -98,7 +98,7 @@ print("Computing Feature 3")
 start = time()
 fileName = logDir + '/hours.txt'
 with open(fileName, 'w') as out_file:
-	print(payLoad.rolling(window='h')[['timeStr', 'nCounts']].count().sort_values(by='nCounts', ascending=False)[0:9].to_csv(sep=',', index=False, header = False), file=out_file)
+	print(payLoad.rolling(window='h')[['timeStr', 'nCounts']].count().sort_values(by='nCounts', ascending=False).drop_duplicates(subset='timeStr', keep='first')[0:9].to_csv(sep=',', index=False, header = False), file=out_file)
 end = time()
 # Print the results
 print("Computed Feature 3 in  {:.4f} seconds".format(end - start))
